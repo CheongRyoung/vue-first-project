@@ -1,68 +1,91 @@
 <template>
-  <div class="card m-5">
+  <div
+    class="card mb-4"
+  >
     <div class="card-content">
       <div class="content">
-        {{ propNote.content }}
-        <div class="has-text-right has-text-grey-light">
-          <small>{{ characterLength }}</small>
+        {{ note.content }}
+        <div class="columns is-mobile has-text-grey-light mt-2">
+          <small class="column">{{ dateFormatted }}</small>
+          <small class="column has-text-right">{{ characterLength }}</small>
         </div>
       </div>
     </div>
     <footer class="card-footer">
-      <!-- a 태그를 RouterLink로 사용하면 페이지 이동을 한다 -->
       <RouterLink
-          :to="`/editNote/${propNote.id}`"
-          href="#"
-          class="card-footer-item">Edit</RouterLink>
+        :to="`/editNote/${ note.id }`"
+        class="card-footer-item"
+        href="#"
+      >
+        Edit
+      </RouterLink>
       <a
-          @click.prevent="storeNotes.deleteNote(propNote.id)"
-          href="#"
-          class="card-footer-item">Delete</a>
+        @click.prevent="modals.deleteNote = true"
+        class="card-footer-item"
+        href="#"
+      >
+        Delete
+      </a>
     </footer>
+    <ModalDeleteNote
+      v-if="modals.deleteNote"
+      v-model="modals.deleteNote"
+      :noteId="note.id"
+    />
   </div>
 </template>
 
 <script setup>
 /*
-props 상위 컴포넌트에서 받은 데이터
- */
-const props = defineProps({
-  propNote: {
-    type: Object,
-    required: true
-  }
-})
+  imports
+*/
+
+  import {computed, reactive} from 'vue'
+  import {useDateFormat} from '@vueuse/core'
+  import { useStoreNotes } from '@/stores/storeNotes'
+
 /*
-computed 컴퓨티드(computed) 속성은 템플릿의 데이터 표현을 더 직관적이고 간결하게 도와주는 속성
+  props
+*/
+
+  const props = defineProps({
+    note: {
+      type: Object,
+      required: true
+    }
+  })
+
+/*
+  store
+*/
+
+  const storeNotes = useStoreNotes()
+
+/*
+  character length
+*/
+
+  const characterLength = computed(() => {
+    let length = props.note.content.length
+    let description = length > 1 ? 'characters' : 'character'
+    return `${ length } ${ description }`
+  })
+
+/*
+  date formatted  vuse 라이브러리 사용
  */
-import {computed} from "vue"
-const characterLength = computed(() => {
-  let length = props.propNote.content.length
-  let description = length > 1 ?
-      'characters' : 'character'
-  return `${length} ${description}`
+const dateFormatted = computed(() => {
+  let date = new Date(parseInt(props.note.date))
+  let dateFormat = useDateFormat(date, 'YYYY-MM-DD HH:mm:ss')
+  return dateFormat.value //따옴표 제거
 })
 
 /*
-emits 이벤트를 상위로 전달하는 것
+  modals
  */
-// const emit = defineEmits(['handleDeleteClick'])
-// const handleDeleteClick = () => {
-//   emit('deleteClicked', props.propNote.id)  // param(@속성네임, 전달할 데이터)
-// }
-// 상위 컴포넌트에서 @deleteClicked="deleteNote" 속성 선언
-// 상위 스크립트에서 메소드 선언
-// const deleteNote = idToDelete => {
-//   storeNotes.piniaNotes = storeNotes.piniaNotes.filter(note => {return note.id != idToDelete})
-// }
+  import ModalDeleteNote from '@/components/Notes/ModalDeleteNote.vue'
+  const modals = reactive({
+    deleteNote: false
+  })
 
-/*
-pinia store
- */
-import {useStoreNotes} from '@/stores/storeNotes'
-const storeNotes = useStoreNotes()
 </script>
-
-<style scoped>
-
-</style>

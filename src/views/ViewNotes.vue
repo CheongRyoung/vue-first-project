@@ -1,48 +1,75 @@
 <template>
   <div class="notes">
+
     <AddEditNote
       v-model="newNote"
+      placeholder="Add a new note"
+      ref="addEditNoteRef"
     >
       <template #buttons>
-        <button @click="addNote" :disabled="!newNote" class="button is-link has-background-success">Add New Note</button>
+        <button
+          @click="addNote"
+          :disabled="!newNote"
+          class="button is-link has-background-success"
+        >
+          Add New Note
+        </button>
       </template>
     </AddEditNote>
-<!--    <div class="card has-background-success-dark p-4 m-5">-->
-<!--      <div class="field">-->
-<!--        <div class="control">-->
-<!--          <textarea v-model="newNote" class="textarea" placeholder="Add a New Note" ref="newNoteRef"/>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--      <div class="field is-grouped is-grouped-right">-->
-<!--        <div class="control">-->
-<!--          <button @click="addNote" :disabled="!newNote" class="button is-link has-background-success">Add New Note</button>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-    <!--하위컴포넌트-->
-    <Note
-        v-for="note in storeNotes.piniaNotes"
-        :key="storeNotes.piniaNotes.id"
-        :propNote="note"
-    /> <!-- :propNote 키를 통해 하위 컴포넌트에 ref를 보낸다 -->
+    <progress
+        v-if="!storeNotes.notesLoaded"
+        class="progress is-large is-success"
+        max="100"
+    />
+    <template
+        v-else
+    >
+      <Note
+        v-for="note in storeNotes.notes"
+        :key="note.id"
+        :note="note"
+      />
+      <div
+          v-if="!storeNotes.notes.length"
+          class="is-size-4 has-text-centered has-text-grey-light is-family-monospace py-6">
+        No notes here yet...
+      </div>
+    </template>
   </div>
 </template>
+
 <script setup>
+
 /*
-notes
+  imports
+*/
+
+  import { ref } from 'vue'
+  import Note from '@/components/Notes/Note.vue'
+  import AddEditNote from '@/components/Notes/AddEditNote.vue'
+  import { useStoreNotes } from '@/stores/storeNotes'
+
+/*
+  store
+*/
+
+  const storeNotes = useStoreNotes()
+
+/*
+  notes
+*/
+
+  const newNote = ref('')
+  const addEditNoteRef = ref(null)
+
+  const addNote = () => {
+    storeNotes.addNote(newNote.value)
+    newNote.value = ''
+    addEditNoteRef.value.focusTextarea()
+  }
+/*
+  Watch characters (유효성 검사로 활용하면 댈듯)
  */
-import {ref} from "vue";
-import Note from '@/components/Notes/Note.vue'
-import {useStoreNotes} from '@/stores/storeNotes.js'
-import AddEditNote from '@/components/Notes/AddEditNote.vue'
-
-const newNoteRef = ref(null) //textArea 노드객체
-const newNote =ref('') //textArea model
-const storeNotes = useStoreNotes() //pinia state
-
-const addNote = () => {
-  storeNotes.addNotes(newNote.value) //pinia action 사용
-  newNote.value = ''
-  newNoteRef.value.focus() //ref 속성은 getElement와 유사하다
-}
+import {useWatchCharacters} from '@/use/useWatchCharacters'
+useWatchCharacters(newNote, 123);
 </script>
