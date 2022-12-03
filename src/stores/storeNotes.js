@@ -3,9 +3,11 @@ import {db} from '@/js/firebase'
 import { collection, onSnapshot
   ,doc, setDoc, deleteDoc, updateDoc, addDoc
   ,query, where, orderBy} from 'firebase/firestore'
+import {useStoreAuth} from '@/stores/storeAuth'
 
-const notesCollectionRef = collection(db, "notes")
-const notesCollectionQuery = query(notesCollectionRef, orderBy("date", "desc"));
+let notesCollectionRef
+let notesCollectionQuery
+let getNotesSnapshot = null
 export const useStoreNotes = defineStore('storeNotes', {
   state: () => {
     return {
@@ -14,9 +16,22 @@ export const useStoreNotes = defineStore('storeNotes', {
     }
   },
   actions: {
+    init() {
+      // initialize our database refs
+      const storeAuth = useStoreAuth()
+      console.info(storeAuth.user)
+      notesCollectionRef = collection(db, 'users', storeAuth.user.id, 'notes')
+      notesCollectionQuery = query(notesCollectionRef, orderBy("date", "desc"));
+      this.getNotes()
+    },
+    clearNotes() {
+      this.notes = []
+      if(getNotesSnapshot) getNotesSnapshot()
+    },
     async getNotes() {
       this.notesLoaded = false
-      const unsubscribe = onSnapshot(notesCollectionQuery, (querySnapshot) => {
+      if(getNotesSnapshot) getNotesSnapshot() // unsubscribe from any active listener 함수 실행으로 중지
+      getNotesSnapshot = onSnapshot(notesCollectionQuery, (querySnapshot) => {
         let notes = []
         querySnapshot.forEach((doc) => {
           let note = {
@@ -29,9 +44,7 @@ export const useStoreNotes = defineStore('storeNotes', {
         this.notes = notes
         this.notesLoaded = true
       });
-
-      // later on
-      // unsubscribe()
+      // 중지를 시켜줘야됨 이전 사용자가 사용하던 function이 종료되지 않고 계속 실행중..
     },
     async addNote(newNoteContent) {
       let currentDate = new Date().getTime(),

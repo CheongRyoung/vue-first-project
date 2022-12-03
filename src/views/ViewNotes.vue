@@ -44,7 +44,7 @@
   imports
 */
 
-  import { ref } from 'vue'
+  import {onMounted, ref} from 'vue'
   import Note from '@/components/Notes/Note.vue'
   import AddEditNote from '@/components/Notes/AddEditNote.vue'
   import { useStoreNotes } from '@/stores/storeNotes'
@@ -70,6 +70,7 @@
 /*
   Watch characters (유효성 검사로 활용하면 댈듯)
  */
-import {useWatchCharacters} from '@/use/useWatchCharacters'
-useWatchCharacters(newNote, 123);
+  import {useWatchCharacters} from '@/use/useWatchCharacters'
+  useWatchCharacters(newNote, 123);
+
 </script>
